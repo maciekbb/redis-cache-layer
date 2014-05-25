@@ -68,7 +68,7 @@ module RCL
       $redis.pipelined do
         ids.each do |id|
           $redis.hgetall("#{cls_name}:#{id}")
-          logger.debug "Getting cached result for #{cls_name}:#{id}"
+          # logger.debug "Getting cached result for #{cls_name}:#{id}"
         end
       end
     end
@@ -80,14 +80,14 @@ module RCL
           $redis.hmset(record_key, r.attributes.to_a.flatten)
           set_expiration_time(record_key)
 
-          logger.debug "Cache result for #{record_key}"
+          # logger.debug "Cache result for #{record_key}"
         end
       end
     end
 
     def set_expiration_time(key)
-      $redis.expireat(key, 1.minute.from_now.to_time.to_i)
-      logger.debug "Setting expiration time for #{key}"
+      $redis.expireat(key, 10.minute.from_now.to_time.to_i)
+      # logger.debug "Setting expiration time for #{key}"
     end
 
 

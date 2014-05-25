@@ -40,4 +40,20 @@ gem 'spring',        group: :development
 
 
 # add redis
-gem "redis"
+gem "redis", "~> 3.0.1"
+gem "hiredis", "~> 0.4.5"
+
+# add rspec
+group :development, :test do
+  gem 'rspec-rails', '~> 3.0.0.beta'
+end
+
+# add pg
+gem "pg"
+
+# profiler
+gem 'rack-mini-profiler'
+
+group :profile do
+  gem 'ruby-prof'
+end

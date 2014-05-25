@@ -1,5 +1,6 @@
 class Car < ActiveRecord::Base
+  include RCL
+
   belongs_to :owner
 
-  include RCL
 end

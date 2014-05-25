@@ -1,0 +1,5 @@
+<ul>
+<% @cars.each do |c| %>
+  <li><%= "#{c["name"]}, #{c["color"]}, #{c["speed"]}" %></li>
+<% end %>
+</ul>

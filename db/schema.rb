@@ -13,6 +13,9 @@
 
 ActiveRecord::Schema.define(version: 20140524172958) do
 
+  # These are extensions that must be enabled in order to support this database
+  enable_extension "plpgsql"
+
   create_table "cars", force: true do |t|
     t.string   "name"
     t.string   "color"
@@ -22,7 +25,7 @@ ActiveRecord::Schema.define(version: 20140524172958) do
     t.integer  "speed"
   end
 
-  add_index "cars", ["owner_id"], name: "index_cars_on_owner_id"
+  add_index "cars", ["owner_id"], name: "index_cars_on_owner_id", using: :btree
 
   create_table "owners", force: true do |t|
     t.string   "name"
