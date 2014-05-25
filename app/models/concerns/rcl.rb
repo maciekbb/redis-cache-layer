@@ -6,26 +6,31 @@ module RCL
 
   module ClassMethods
     def rall
-      ids_key = "#{cls_name}:indices:all"
-      get_collection(ids_key, -> { all })
+      key = "#{cls_name}:indices:all"
+      create_indices(key, -> { all })
+
+      ids = $redis.smembers(key)
+      get_cached_records(ids)
     end
 
     def rwhere(conditions = {})
       raise "No conditions" if conditions.size == 0
 
-      attr_name = conditions.keys.first
-      attr_value = conditions.values.first
-
-      ids_key = "#{cls_name}:indices:#{attr_name}:#{attr_value}"
-      result = get_collection(ids_key, -> { where(attr_name => attr_value ) })
-
-
-      conditions.shift
-      if conditions.size > 0
-        result = where(id: result.map { |r| r["id"] }).where(conditions)
+      keys = conditions.map do |k, v|
+        key = "#{cls_name}:indices:#{k}:#{v}"
+        create_indices(key, -> { where(k => v) })
+        key
       end
 
-      result
+
+      ids = if keys.size > 1
+        $redis.sinter(keys)
+      else
+        $redis.smembers(keys.first)
+      end
+
+      get_cached_records(ids)
+
     end
 
     def rtop(attr_name, n)
@@ -46,29 +51,37 @@ module RCL
       result
     end
 
-    def get_collection(collection_key, condition)
-      if $redis.exists(collection_key)
-        ids = $redis.smembers(collection_key)
-        result = get_cached_records(ids)
-      else
+    # def get_collection(ids, condition)
+    #   if $redis.exists(collection_key)
+    #     ids = $redis.smembers(collection_key)
+    #     result = get_cached_records(ids)
+    #   else
+    #     result = create_indices(collection_key, condition)
+    #   end
+    #
+    #   result
+    # end
+
+    def create_indices(key, condition)
+      unless $redis.exists(key)
+        logger.debug "Creating indices for #{key}"
         result = condition.call
         if result.count > 0
           $redis.pipelined do
-            $redis.sadd(collection_key, result.map(&:id))
-            set_expiration_time(collection_key)
+            $redis.sadd(key, result.map(&:id))
+            set_expiration_time(key)
           end
         end
         cache_result(result)
       end
 
-      result
     end
 
     def get_cached_records(ids)
       $redis.pipelined do
         ids.each do |id|
+          logger.debug "Getting cached result for #{cls_name}:#{id}"
           $redis.hgetall("#{cls_name}:#{id}")
-          # logger.debug "Getting cached result for #{cls_name}:#{id}"
         end
       end
     end
@@ -77,17 +90,17 @@ module RCL
       $redis.pipelined do
         result.each do |r|
           record_key = "#{cls_name}:#{r.id}"
+          logger.debug "Cache result for #{record_key}"
+
           $redis.hmset(record_key, r.attributes.to_a.flatten)
           set_expiration_time(record_key)
-
-          # logger.debug "Cache result for #{record_key}"
         end
       end
     end
 
     def set_expiration_time(key)
+      logger.debug "Setting expiration time for #{key}"
       $redis.expireat(key, 10.minute.from_now.to_time.to_i)
-      # logger.debug "Setting expiration time for #{key}"
     end
 
 
