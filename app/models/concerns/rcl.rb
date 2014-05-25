@@ -64,7 +64,7 @@ module RCL
 
     def create_indices(key, condition)
       unless $redis.exists(key)
-        logger.debug "Creating indices for #{key}"
+        # logger.debug "Creating indices for #{key}"
         result = condition.call
         if result.count > 0
           $redis.pipelined do
@@ -80,7 +80,7 @@ module RCL
     def get_cached_records(ids)
       $redis.pipelined do
         ids.each do |id|
-          logger.debug "Getting cached result for #{cls_name}:#{id}"
+          # logger.debug "Getting cached result for #{cls_name}:#{id}"
           $redis.hgetall("#{cls_name}:#{id}")
         end
       end
@@ -90,7 +90,7 @@ module RCL
       $redis.pipelined do
         result.each do |r|
           record_key = "#{cls_name}:#{r.id}"
-          logger.debug "Cache result for #{record_key}"
+          # logger.debug "Cache result for #{record_key}"
 
           $redis.hmset(record_key, r.attributes.to_a.flatten)
           set_expiration_time(record_key)
@@ -99,7 +99,7 @@ module RCL
     end
 
     def set_expiration_time(key)
-      logger.debug "Setting expiration time for #{key}"
+      # logger.debug "Setting expiration time for #{key}"
       $redis.expireat(key, 10.minute.from_now.to_time.to_i)
     end
 

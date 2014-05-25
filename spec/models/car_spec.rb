@@ -4,8 +4,9 @@ describe Car, :type => :model do
   before(:all) do
     colors = ["red", "green", "blue"]
     names = ["toyota", "vw", "opel"]
-    100.times do
-      Car.create!(color: colors.sample, name: names.sample, speed: rand(1000))
+    speeds = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+    5000.times do
+      Car.create!(color: colors.sample, name: names.sample, speed: speeds.sample)
     end
 
     $redis.flushall
@@ -31,7 +32,7 @@ describe Car, :type => :model do
     end
 
     it "generates top list" do
-      expect(Car.rtop("speed", 20).last["speed"].to_i).to eq Car.order(speed: :desc).limit(21)[-1]["speed"]
+      expect(Car.rtop("speed", 20).last["speed"].to_i).to eq Car.order(speed: :desc).limit(20)[-1]["speed"]
     end
 
   end
@@ -53,13 +54,13 @@ describe Car, :type => :model do
 
     it "where" do
       benchmark("where") do
-        Car.where(color: "red", name: "toyota").length
+        Car.where(color: "red", name: "toyota", speed: 30).length
       end
     end
 
     it "rwhere" do
       benchmark("rwhere") do
-        Car.rwhere(color: "red", name: "toyota").length
+        Car.rwhere(color: "red", name: "toyota", speed: 30).length
       end
     end
   end
@@ -69,7 +70,7 @@ end
 def benchmark(desc, &block)
   block.call
   time = Benchmark.realtime do
-    50.times do
+    200.times do
       block.call
     end
   end

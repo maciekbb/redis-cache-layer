@@ -42,6 +42,7 @@ gem 'spring',        group: :development
 # add redis
 gem "redis", "~> 3.0.1"
 gem "hiredis", "~> 0.4.5"
+gem "em-synchrony"
 
 # add rspec
 group :development, :test do
